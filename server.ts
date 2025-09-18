@@ -1,4 +1,6 @@
 import { config } from "dotenv";
+// Import compression polyfill first
+import "./config/compress.config";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -22,13 +24,19 @@ if (typeof process !== "undefined") {
 // Logger middleware
 app.use(logger());
 
-// Compress middleware
-app.use(
-  compress({
-    encoding: "gzip",
-    threshold: 1024, // Minimum size to compress (1KB)
-  })
-);
+// Compress middleware - only enable if CompressionStream is available
+if (typeof globalThis.CompressionStream !== "undefined") {
+  app.use(
+    compress({
+      encoding: "gzip",
+      threshold: 1024,
+    })
+  );
+} else {
+  console.log(
+    "CompressionStream not available, skipping compression middleware"
+  );
+}
 
 // CORS configuration
 app.use(
